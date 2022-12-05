@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
+import android.os.Bundle;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.view.HapticFeedbackConstants;
@@ -23,6 +24,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.collection.LongSparseArray;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -35,6 +37,7 @@ import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.UserObject;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
@@ -68,6 +71,8 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
 
     private TLRPC.account_Password currentPassword;
 
+    private int protectionSectionRow;
+    private int godFatherRow;
     private int privacySectionRow;
     private int blockedRow;
     private int phoneNumberRow;
@@ -111,10 +116,11 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
     private boolean newSync;
     private boolean currentSuggest;
     private boolean newSuggest;
+    private long currentGodFatherUserId;
+    private long newGodFatherUserId;
     private boolean archiveChats;
 
     private boolean[] clear = new boolean[2];
-
     @Override
     public boolean onFragmentCreate() {
         super.onFragmentCreate();
@@ -123,6 +129,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         getMessagesController().getBlockedPeers(true);
         currentSync = newSync = getUserConfig().syncContacts;
         currentSuggest = newSuggest = getUserConfig().suggestContacts;
+        currentGodFatherUserId = newGodFatherUserId = getUserConfig().godFatherUserId;
         TLRPC.TL_globalPrivacySettings privacySettings = getContactsController().getGlobalPrivacySettings();
         if (privacySettings != null) {
             archiveChats = privacySettings.archive_and_mute_new_noncontact_peers;
@@ -166,6 +173,10 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
             getConnectionsManager().sendRequest(req, (response, error) -> {
 
             });
+        }
+        if (currentGodFatherUserId != newGodFatherUserId) {
+            getUserConfig().godFatherUserId = newGodFatherUserId;
+            save = true;
         }
         TLRPC.TL_globalPrivacySettings globalPrivacySettings = getContactsController().getGlobalPrivacySettings();
         if (globalPrivacySettings != null && globalPrivacySettings.archive_and_mute_new_noncontact_peers != archiveChats) {
@@ -219,7 +230,19 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
             if (!view.isEnabled()) {
                 return;
             }
-            if (position == blockedRow) {
+            if (position == godFatherRow) {
+                Bundle args = new Bundle();
+                args.putBoolean("destroyAfterSelect", true);
+                args.putBoolean("returnAsResult", true);
+                args.putBoolean("onlyUsers", true);
+                args.putBoolean("allowSelf", false);
+                ContactsActivity fragment = new ContactsActivity(args);
+                LongSparseArray<TLRPC.User> users = new LongSparseArray<>();
+                users.put(getUserConfig().getCurrentUser().id, null);
+                fragment.setIgnoreUsers(users);
+                fragment.setDelegate((user, param, activity) -> setGodFather(user));
+                presentFragment(fragment);
+            } else if (position == blockedRow) {
                 presentFragment(new PrivacyUsersActivity());
             } else if (position == sessionsRow) {
                 presentFragment(new SessionsActivity(0));
@@ -569,6 +592,8 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
 
     private void updateRows(boolean notify) {
         rowCount = 0;
+        protectionSectionRow = rowCount++;
+        godFatherRow = rowCount++;
         privacySectionRow = rowCount++;
         blockedRow = rowCount++;
         phoneNumberRow = rowCount++;
@@ -824,6 +849,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                     position == voicesRow && !getContactsController().getLoadingPrivacyInfo(ContactsController.PRIVACY_RULES_TYPE_VOICE_MESSAGES) ||
                     position == deleteAccountRow && !getContactsController().getLoadingDeleteInfo() ||
                     position == newChatsRow && !getContactsController().getLoadingGlobalSettings() ||
+                    position == godFatherRow ||
                     position == emailLoginRow || position == paymentsClearRow || position == secretMapRow ||
                     position == contactsSyncRow || position == passportRow || position == contactsDeleteRow || position == contactsSuggestRow;
         }
@@ -880,6 +906,19 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                             showLoading = true;
                             textCell.setText(LocaleController.getString("BlockedUsers", R.string.BlockedUsers), true);
                         }
+                    } else if (position == godFatherRow) {
+                        if (getContactsController().contactsLoaded)
+                            if (getContactsController().isContact(newGodFatherUserId)) {
+                                TLRPC.TL_contact godFatherContact = getContactsController().contactsDict.get(newGodFatherUserId);
+                                if (godFatherContact.user_id != 0) {
+                                    TLRPC.User godFatherUser = getMessagesController().getUser(godFatherContact.user_id);
+                                    value = UserObject.getUserName(godFatherUser);
+                                }
+                        } else {
+                                showLoading = true;
+                                loadingLen = 30;
+                        }
+                        textCell.setTextAndValue(LocaleController.getString("GodFather", R.string.GodFather), value, true);
                     } else if (position == sessionsRow) {
                         textCell.setText(LocaleController.getString("SessionsTitle", R.string.SessionsTitle), false);
                     } else if (position == webSessionsRow) {
@@ -1037,6 +1076,8 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                     HeaderCell headerCell = (HeaderCell) holder.itemView;
                     if (position == privacySectionRow) {
                         headerCell.setText(LocaleController.getString("PrivacyTitle", R.string.PrivacyTitle));
+                    } else if (position == protectionSectionRow) {
+                        headerCell.setText(LocaleController.getString("ProtectionTitle", R.string.ProtectionTitle));
                     } else if (position == securitySectionRow) {
                         headerCell.setText(LocaleController.getString("SecurityTitle", R.string.SecurityTitle));
                     } else if (position == advancedSectionRow) {
@@ -1072,7 +1113,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                 return 0;
             } else if (position == deleteAccountDetailRow || position == groupsDetailRow || position == sessionsDetailRow || position == secretDetailRow || position == botsDetailRow || position == contactsDetailRow || position == newChatsSectionRow) {
                 return 1;
-            } else if (position == securitySectionRow || position == advancedSectionRow || position == privacySectionRow || position == secretSectionRow || position == botsSectionRow || position == contactsSectionRow || position == newChatsHeaderRow) {
+            } else if (position == protectionSectionRow || position == securitySectionRow || position == advancedSectionRow || position == privacySectionRow || position == secretSectionRow || position == botsSectionRow || position == contactsSectionRow || position == newChatsHeaderRow) {
                 return 2;
             } else if (position == secretWebpageRow || position == contactsSyncRow || position == contactsSuggestRow || position == newChatsRow) {
                 return 3;
@@ -1081,6 +1122,14 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
             }
             return 0;
         }
+    }
+
+    private void setGodFather(TLRPC.User user) {
+        if (user == null) {
+            return;
+        }
+        newGodFatherUserId = user.id;
+        AlertsCreator.showSimpleToast(PrivacySettingsActivity.this, LocaleController.getString("GodFatherUpdated", R.string.GodFatherUpdated));
     }
 
     @Override

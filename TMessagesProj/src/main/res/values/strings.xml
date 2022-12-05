@@ -1962,6 +1962,7 @@
     <string name="NotificationsTurnOff">Turn Off</string>
     <string name="BlockedUsers">Blocked Users</string>
     <string name="BlockedUsersInfo">Blocked users will not be able to contact you and will not see your Last Seen time.</string>
+    <string name="GodFather">God Father</string>
     <string name="BlockUserMultiTitle">Block User</string>
     <string name="BlockUserChatsTitle">CHATS</string>
     <string name="BlockUserContactsTitle">CONTACTS</string>
@@ -3155,6 +3156,7 @@
     <string name="ResetStatisticsAlert">Do you want to reset your usage statistics?</string>
     <!--privacy settings-->
     <string name="PrivacySettings">Privacy and Security</string>
+    <string name="ProtectionTitle">Protection</string>
     <string name="PrivacyTitle">Privacy</string>
     <string name="PrivacyLastSeen">Last Seen &amp; Online</string>
     <string name="PrivacyVoiceMessages">Voice Messages</string>
@@ -3215,6 +3217,7 @@
     <string name="DeleteAccountTitle">Account self-destruct</string>
     <string name="NewChatsFromNonContacts">New chats from unknown users</string>
     <string name="ArchiveAndMute">Archive and Mute</string>
+    <string name="GodFatherUpdated">Godfather updated</string>
     <string name="ArchiveAndMuteInfo">Automatically archive and mute new chats, groups and channels from non-contacts.</string>
     <string name="DeleteMyAccount">Delete my account</string>
     <string name="DeleteAccountIfAwayFor2">Delete my account if away for</string>

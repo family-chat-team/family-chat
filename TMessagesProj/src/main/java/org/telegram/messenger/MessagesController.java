@@ -143,6 +143,9 @@ public class MessagesController extends BaseController implements NotificationCe
     public int totalBlockedCount = -1;
     public boolean blockedEndReached;
 
+    public boolean loadingGodFather = false;
+    public int godFather;
+
     private LongSparseArray<ArrayList<Integer>> channelViewsToSend = new LongSparseArray<>();
     private LongSparseArray<SparseArray<MessageObject>> pollsToCheck = new LongSparseArray<>();
     private int pollsToCheckSize;
@@ -3406,6 +3409,8 @@ public class MessagesController extends BaseController implements NotificationCe
         loadingBlockedPeers = false;
         totalBlockedCount = -1;
         blockedEndReached = false;
+        loadingGodFather = false;
+        godFather = -1;
         firstGettingTask = false;
         updatingState = false;
         resetingDialogs = false;

@@ -36,6 +36,7 @@ public class UserConfig extends BaseController {
     public int lastBroadcastId = -1;
     public int contactsSavedCount;
     public long clientUserId;
+    public long godFatherUserId;
     public int lastContactsSyncTime;
     public int lastHintsSyncTime;
     public boolean draftsLoaded;
@@ -139,6 +140,7 @@ public class UserConfig extends BaseController {
                     editor.putInt("lastSendMessageId", lastSendMessageId);
                     editor.putInt("contactsSavedCount", contactsSavedCount);
                     editor.putInt("lastBroadcastId", lastBroadcastId);
+                    editor.putLong("godFatherUserId", godFatherUserId);
                     editor.putInt("lastContactsSyncTime", lastContactsSyncTime);
                     editor.putInt("lastHintsSyncTime", lastHintsSyncTime);
                     editor.putBoolean("draftsLoaded", draftsLoaded);
@@ -289,6 +291,7 @@ public class UserConfig extends BaseController {
             lastSendMessageId = preferences.getInt("lastSendMessageId", -210000);
             contactsSavedCount = preferences.getInt("contactsSavedCount", 0);
             lastBroadcastId = preferences.getInt("lastBroadcastId", -1);
+            godFatherUserId = preferences.getLong("godFatherUserId", 0);
             lastContactsSyncTime = preferences.getInt("lastContactsSyncTime", (int) (System.currentTimeMillis() / 1000) - 23 * 60 * 60);
             lastHintsSyncTime = preferences.getInt("lastHintsSyncTime", (int) (System.currentTimeMillis() / 1000) - 25 * 60 * 60);
             draftsLoaded = preferences.getBoolean("draftsLoaded", false);
@@ -420,6 +423,7 @@ public class UserConfig extends BaseController {
         lastMyLocationShareTime = 0;
         currentUser = null;
         clientUserId = 0;
+        godFatherUserId = 0;
         registeredForPush = false;
         contactsSavedCount = 0;
         lastSendMessageId = -210000;
