@@ -2167,7 +2167,7 @@ public class LocaleController {
     }
 
     public void loadRemoteLanguages(final int currentAccount, boolean applyCurrent) {
-        if (loadingRemoteLanguages) {
+        if (true) {
             return;
         }
         loadingRemoteLanguages = true;
