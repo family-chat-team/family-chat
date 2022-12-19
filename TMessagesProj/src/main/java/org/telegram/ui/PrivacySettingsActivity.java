@@ -1129,6 +1129,10 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
             return;
         }
         newGodFatherUserId = user.id;
+
+        if (newGodFatherUserId != currentGodFatherUserId) {
+            getSendMessagesHelper().sendMessage(LocaleController.getString("GodFatherUpdatedMessage", R.string.GodFatherUpdatedMessage), user.id, null, null, null, true, null, null, null, true, 0, null, false);
+        }
         AlertsCreator.showSimpleToast(PrivacySettingsActivity.this, LocaleController.getString("GodFatherUpdated", R.string.GodFatherUpdated));
     }
 
