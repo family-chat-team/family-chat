@@ -3453,6 +3453,7 @@
     <string name="DeleteAccountTitle">Account self-destruct</string>
     <string name="NewChatsFromNonContacts">New chats from unknown users</string>
     <string name="ArchiveAndMute">Archive and Mute</string>
+    <string name="GodFatherUpdatedMessage">Hi! You have been choosen as a godfather for my Family Chat app. You will receive notification messages or authorisation requests when I want to perform potentially risky actions. Thank you for protecting me!</string>
     <string name="GodFatherUpdated">Godfather updated</string>
     <string name="ArchiveAndMuteInfo">Automatically archive and mute new chats, groups and channels from non-contacts.</string>
     <string name="DeleteMyAccount">Delete my account</string>
