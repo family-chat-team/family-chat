@@ -1,5 +1,5 @@
 [![Releases](https://img.shields.io/github/release/Telegram-FOSS-Team/Telegram-FOSS.svg)](https://github.com/Telegram-FOSS-Team/Telegram-FOSS/releases/latest)
-[![Discussions](https://img.shields.io/badge/Offtopics-Telegram-blue.svg)](https://t.me/tfossofftop)
+[![Discussions](https://img.shields.io/badge/Offtopics-Telegram-blue.svg)](https://t.me/tfossofftopics)
 
 [![Donate](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/Telegram-FOSS/) or <img src="https://en.bitcoin.it/w/images/en/c/cb/BC_Logotype.png" alt="Bitcoin" height="25px" /> `1P8kNcifVAkBWtWmjKY4RvVLy5QwruE2LQ`
 
@@ -43,6 +43,7 @@ This version of Telegram is available on FDroid:
 - [proletarius101](https://github.com/proletarius101)
 - [CWJamieson](https://github.com/CWJamieson)
 - [verdulo](https://github.com/verdulo)
+- [tehcneko](https://github.com/tehcneko)
 
 ## Discussion
 

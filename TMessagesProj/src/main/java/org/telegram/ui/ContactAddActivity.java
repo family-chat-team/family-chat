@@ -22,24 +22,24 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import org.telegram.messenger.AndroidUtilities;
 import org.telegram.PhoneFormat.PhoneFormat;
+import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.Emoji;
 import org.telegram.messenger.FileLog;
-import org.telegram.messenger.ImageLocation;
 import org.telegram.messenger.LocaleController;
-import org.telegram.messenger.UserObject;
-import org.telegram.tgnet.TLRPC;
 import org.telegram.messenger.MessagesController;
 import org.telegram.messenger.NotificationCenter;
 import org.telegram.messenger.R;
+import org.telegram.messenger.UserObject;
+import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.ActionBar;
 import org.telegram.ui.ActionBar.ActionBarMenu;
+import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.ActionBar.ThemeDescription;
 import org.telegram.ui.Cells.CheckBoxCell;
 import org.telegram.ui.Components.AvatarDrawable;
 import org.telegram.ui.Components.BackupImageView;
-import org.telegram.ui.ActionBar.BaseFragment;
 import org.telegram.ui.Components.EditTextBoldCursor;
 import org.telegram.ui.Components.LayoutHelper;
 
@@ -62,6 +62,9 @@ public class ContactAddActivity extends BaseFragment implements NotificationCent
     private boolean addContact;
     private boolean needAddException;
     private String phone;
+
+    private String firstNameFromCard;
+    private String lastNameFromCard;
 
     private ContactAddActivityDelegate delegate;
 
@@ -90,6 +93,8 @@ public class ContactAddActivity extends BaseFragment implements NotificationCent
         getNotificationCenter().addObserver(this, NotificationCenter.updateInterfaces);
         user_id = getArguments().getLong("user_id", 0);
         phone = getArguments().getString("phone");
+        firstNameFromCard = getArguments().getString("first_name_card");
+        lastNameFromCard = getArguments().getString("last_name_card");
         addContact = getArguments().getBoolean("addContact", false);
         needAddException = MessagesController.getNotificationsSettings(currentAccount).getBoolean("dialog_bar_exception" + user_id, false);
         TLRPC.User user = null;
@@ -218,6 +223,7 @@ public class ContactAddActivity extends BaseFragment implements NotificationCent
                 focused = hasFocus;
             }
         });
+        firstNameField.setText(firstNameFromCard);
 
         lastNameField = new EditTextBoldCursor(context) {
             @Override
@@ -248,9 +254,10 @@ public class ContactAddActivity extends BaseFragment implements NotificationCent
             }
             return false;
         });
+        lastNameField.setText(lastNameFromCard);
 
         TLRPC.User user = getMessagesController().getUser(user_id);
-        if (user != null) {
+        if (user != null && firstNameFromCard == null && lastNameFromCard == null) {
             if (user.phone == null) {
                 if (phone != null) {
                     user.phone = PhoneFormat.stripExceptNumbers(phone);
@@ -266,14 +273,16 @@ public class ContactAddActivity extends BaseFragment implements NotificationCent
         infoTextView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
         infoTextView.setGravity(LocaleController.isRTL ? Gravity.RIGHT : Gravity.LEFT);
         if (addContact) {
-            if (!needAddException || TextUtils.isEmpty(user.phone)) {
+            if (!needAddException || TextUtils.isEmpty(getPhone())) {
                 linearLayout.addView(infoTextView, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 24, 18, 24, 0));
             }
 
             if (needAddException) {
                 checkBoxCell = new CheckBoxCell(getParentActivity(), 0);
                 checkBoxCell.setBackgroundDrawable(Theme.getSelectorDrawable(false));
-                checkBoxCell.setText(LocaleController.formatString("SharePhoneNumberWith", R.string.SharePhoneNumberWith, UserObject.getFirstName(user)), "", true, false);
+                CharSequence firstName = UserObject.getFirstName(user);
+                firstName = Emoji.replaceEmoji(firstName, infoTextView.getPaint().getFontMetricsInt(), AndroidUtilities.dp(12), false);
+                checkBoxCell.setText(AndroidUtilities.replaceCharSequence("%1$s", AndroidUtilities.replaceTags(LocaleController.getString("SharePhoneNumberWith", R.string.SharePhoneNumberWith)), firstName), "", true, false);
                 checkBoxCell.setPadding(AndroidUtilities.dp(7), 0, AndroidUtilities.dp(7), 0);
                 checkBoxCell.setOnClickListener(v -> checkBoxCell.setChecked(!checkBoxCell.isChecked(), true));
                 linearLayout.addView(checkBoxCell, LayoutHelper.createLinear(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, 0, 10, 0, 0));
@@ -295,17 +304,24 @@ public class ContactAddActivity extends BaseFragment implements NotificationCent
         if (user == null) {
             return;
         }
-        if (TextUtils.isEmpty(user.phone)) {
+        if (TextUtils.isEmpty(getPhone())) {
             nameTextView.setText(LocaleController.getString("MobileHidden", R.string.MobileHidden));
-            infoTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("MobileHiddenExceptionInfo", R.string.MobileHiddenExceptionInfo, UserObject.getFirstName(user))));
+            CharSequence firstName = UserObject.getFirstName(user);
+            firstName = Emoji.replaceEmoji(firstName, infoTextView.getPaint().getFontMetricsInt(), AndroidUtilities.dp(12), false);
+            infoTextView.setText(AndroidUtilities.replaceCharSequence("%1$s", AndroidUtilities.replaceTags(LocaleController.getString("MobileHiddenExceptionInfo", R.string.MobileHiddenExceptionInfo)), firstName));
         } else {
-            nameTextView.setText(PhoneFormat.getInstance().format("+" + user.phone));
+            nameTextView.setText(PhoneFormat.getInstance().format("+" + getPhone()));
             if (needAddException) {
                 infoTextView.setText(AndroidUtilities.replaceTags(LocaleController.formatString("MobileVisibleInfo", R.string.MobileVisibleInfo, UserObject.getFirstName(user))));
             }
         }
         onlineTextView.setText(LocaleController.formatUserStatus(currentAccount, user));
         avatarImage.setForUserOrChat(user, avatarDrawable = new AvatarDrawable(user));
+    }
+
+    private String getPhone() {
+        TLRPC.User user = getMessagesController().getUser(user_id);
+        return user != null && !TextUtils.isEmpty(user.phone) ? user.phone : phone;
     }
 
     public void didReceivedNotification(int id, int account, Object... args) {

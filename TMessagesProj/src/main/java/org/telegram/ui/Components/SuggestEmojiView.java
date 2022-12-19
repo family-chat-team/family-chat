@@ -32,7 +32,6 @@ import org.telegram.messenger.Emoji;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessageObject;
 import org.telegram.messenger.NotificationCenter;
-import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.Theme;
@@ -133,12 +132,6 @@ public class SuggestEmojiView extends FrameLayout implements NotificationCenter.
             }
         });
 
-        this.leftGradient = getResources().getDrawable(R.drawable.gradient_right).mutate();
-        this.leftGradient.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_stickersHintPanel, resourcesProvider), PorterDuff.Mode.MULTIPLY));
-
-        this.rightGradient = getResources().getDrawable(R.drawable.gradient_left).mutate();
-        this.rightGradient.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_stickersHintPanel, resourcesProvider), PorterDuff.Mode.MULTIPLY));
-
         MediaDataController.getInstance(currentAccount).checkStickers(MediaDataController.TYPE_EMOJIPACKS);
     }
 
@@ -154,8 +147,8 @@ public class SuggestEmojiView extends FrameLayout implements NotificationCenter.
         if (backgroundPaint != null) {
             backgroundPaint.setColor(Theme.getColor(Theme.key_chat_stickersHintPanel, resourcesProvider));
         }
-        this.leftGradient.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_stickersHintPanel, resourcesProvider), PorterDuff.Mode.MULTIPLY));
-        this.rightGradient.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_stickersHintPanel, resourcesProvider), PorterDuff.Mode.MULTIPLY));
+        Theme.chat_gradientLeftDrawable.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_stickersHintPanel, resourcesProvider), PorterDuff.Mode.MULTIPLY));
+        Theme.chat_gradientRightDrawable.setColorFilter(new PorterDuffColorFilter(Theme.getColor(Theme.key_chat_stickersHintPanel, resourcesProvider), PorterDuff.Mode.MULTIPLY));
     }
 
     public void forceClose() {
@@ -306,7 +299,7 @@ public class SuggestEmojiView extends FrameLayout implements NotificationCenter.
         searchRunnable = () -> {
             ArrayList<MediaDataController.KeywordResult> standard = new ArrayList<>(1);
             standard.add(new MediaDataController.KeywordResult(emoji, null));
-            MediaDataController.getInstance(currentAccount).fillWithAnimatedEmoji(standard, 15, () -> {
+            MediaDataController.getInstance(currentAccount).fillWithAnimatedEmoji(standard, 15, false, () -> {
                 if (id == lastQueryId) {
                     lastQuery = emoji;
                     lastQueryType = 2;
@@ -423,7 +416,6 @@ public class SuggestEmojiView extends FrameLayout implements NotificationCenter.
     private AnimatedFloat showFloat2 = new AnimatedFloat(containerView, 150, 600, CubicBezierInterpolator.EASE_OUT_QUINT);
     private OvershootInterpolator overshootInterpolator = new OvershootInterpolator(.4f);
 
-    private Drawable leftGradient, rightGradient;
     private AnimatedFloat leftGradientAlpha = new AnimatedFloat(containerView, 300, CubicBezierInterpolator.EASE_OUT_QUINT);
     private AnimatedFloat rightGradientAlpha = new AnimatedFloat(containerView, 300, CubicBezierInterpolator.EASE_OUT_QUINT);
 
@@ -549,16 +541,16 @@ public class SuggestEmojiView extends FrameLayout implements NotificationCenter.
 
         float leftAlpha = leftGradientAlpha.set(listView.canScrollHorizontally(-1) ? 1f : 0f);
         if (leftAlpha > 0) {
-            leftGradient.setBounds((int) left, (int) top, (int) left + AndroidUtilities.dp(32), (int) bottom);
-            leftGradient.setAlpha((int) (255 * leftAlpha));
-            leftGradient.draw(canvas);
+            Theme.chat_gradientRightDrawable.setBounds((int) left, (int) top, (int) left + AndroidUtilities.dp(32), (int) bottom);
+            Theme.chat_gradientRightDrawable.setAlpha((int) (255 * leftAlpha));
+            Theme.chat_gradientRightDrawable.draw(canvas);
         }
 
         float rightAlpha = rightGradientAlpha.set(listView.canScrollHorizontally(1) ? 1f : 0f);
         if (rightAlpha > 0) {
-            rightGradient.setBounds((int) right - AndroidUtilities.dp(32), (int) top, (int) right, (int) bottom);
-            rightGradient.setAlpha((int) (255 * rightAlpha));
-            rightGradient.draw(canvas);
+            Theme.chat_gradientLeftDrawable.setBounds((int) right - AndroidUtilities.dp(32), (int) top, (int) right, (int) bottom);
+            Theme.chat_gradientLeftDrawable.setAlpha((int) (255 * rightAlpha));
+            Theme.chat_gradientLeftDrawable.draw(canvas);
         }
 
         canvas.restore();
@@ -678,11 +670,19 @@ public class SuggestEmojiView extends FrameLayout implements NotificationCenter.
             }
 
             @Override
+            public void setPressed(boolean pressed) {
+                super.setPressed(pressed);
+                invalidate();
+            }
+
+            @Override
             protected void dispatchDraw(Canvas canvas) {
                 float scale = 0.8f + 0.2f * (1f - pressed.set(isPressed() ? 1f : 0f));
                 if (drawable != null) {
-                    int cx = getWidth() / 2, cy = (getHeight() - getPaddingBottom() + getPaddingTop()) / 2, w = getWidth() - getPaddingLeft() - getPaddingRight(), h = getHeight() - getPaddingTop() - getPaddingBottom();
-                    drawable.setBounds((int) (cx - w / 2 * scale), (int) (cy - h / 2 * scale), (int) (cx + w / 2 * scale), (int) (cy + h / 2 * scale));
+                    int cx = getWidth() / 2;
+                    int cy = (getHeight() - getPaddingBottom() + getPaddingTop()) / 2;
+                    drawable.setBounds(getPaddingLeft(), getPaddingTop(), getWidth() - getPaddingRight(), getHeight() - getPaddingBottom());
+                    canvas.scale(scale, scale, cx, cy);
                     if (drawable instanceof AnimatedEmojiDrawable) {
                         ((AnimatedEmojiDrawable) drawable).setTime(System.currentTimeMillis());
                     }

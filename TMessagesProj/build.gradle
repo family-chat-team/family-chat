@@ -1,3 +1,5 @@
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
+
 apply plugin: 'com.android.library'
 
 repositories {
@@ -21,17 +23,20 @@ dependencies {
     implementation 'androidx.viewpager:viewpager:1.0.0'
     implementation 'androidx.dynamicanimation:dynamicanimation:1.0.0'
     implementation 'androidx.multidex:multidex:2.0.1'
-    implementation "androidx.sharetarget:sharetarget:1.1.0"
+    implementation "androidx.sharetarget:sharetarget:1.2.0"
 
     compileOnly 'org.checkerframework:checker-qual:2.5.2'
     compileOnly 'org.checkerframework:checker-compat-qual:2.5.0'
     implementation 'com.googlecode.mp4parser:isoparser:1.0.6'
     implementation 'com.stripe:stripe-android:2.0.2'
+    implementation 'com.google.code.gson:gson:2.10'
 
     implementation 'org.osmdroid:osmdroid-android:6.1.14'
 
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
 }
+
+def isWindows = String.valueOf(DefaultNativePlatform.currentOperatingSystem.toFamilyName() == OperatingSystemFamily.WINDOWS)
 
 //return an api key from a properties file.
 def getAppId(){
@@ -78,8 +83,8 @@ android {
     defaultConfig.versionCode = Integer.parseInt(APP_VERSION_CODE)
 
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 30
+        minSdkVersion 19
+        targetSdkVersion 31
         versionName "8.9.0"
 
         vectorDrawables.generatedDensities = ['mdpi', 'hdpi', 'xhdpi', 'xxhdpi']
@@ -108,7 +113,8 @@ android {
             ndk.debugSymbolLevel = 'FULL'
             buildConfigField "String", "APP_CENTER_HASH", "\"\""
             buildConfigField "boolean", "DEBUG_VERSION", "true"
-            buildConfigField "boolean", "DEBUG_PRIVATE_VERSION", "false"
+            buildConfigField "boolean", "DEBUG_PRIVATE_VERSION", "true"
+            buildConfigField "boolean", "BUILD_HOST_IS_WINDOWS", isWindows
         }
 
         HA_private {
@@ -121,6 +127,7 @@ android {
             buildConfigField "String", "APP_CENTER_HASH", "\"" + getProps("APP_CENTER_HASH_PRIVATE") + "\""
             buildConfigField "boolean", "DEBUG_VERSION", "true"
             buildConfigField "boolean", "DEBUG_PRIVATE_VERSION", "true"
+            buildConfigField "boolean", "BUILD_HOST_IS_WINDOWS", isWindows
         }
 
         HA_public {
@@ -133,6 +140,7 @@ android {
             buildConfigField "String", "APP_CENTER_HASH", "\"" + getProps("APP_CENTER_HASH_PUBLIC") + "\""
             buildConfigField "boolean", "DEBUG_VERSION", "true"
             buildConfigField "boolean", "DEBUG_PRIVATE_VERSION", "false"
+            buildConfigField "boolean", "BUILD_HOST_IS_WINDOWS", isWindows
         }
 
         standalone {
@@ -145,6 +153,7 @@ android {
             buildConfigField "String", "APP_CENTER_HASH", "\"\""
             buildConfigField "boolean", "DEBUG_VERSION", "false"
             buildConfigField "boolean", "DEBUG_PRIVATE_VERSION", "false"
+            buildConfigField "boolean", "BUILD_HOST_IS_WINDOWS", isWindows
         }
 
         release {
@@ -158,6 +167,7 @@ android {
             buildConfigField "String", "APP_CENTER_HASH", "\"\""
             buildConfigField "boolean", "DEBUG_VERSION", "false"
             buildConfigField "boolean", "DEBUG_PRIVATE_VERSION", "false"
+            buildConfigField "boolean", "BUILD_HOST_IS_WINDOWS", isWindows
         }
     }
 }

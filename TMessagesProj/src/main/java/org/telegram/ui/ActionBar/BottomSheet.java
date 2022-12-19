@@ -816,7 +816,7 @@ public class BottomSheet extends Dialog {
                 textView.setTextColor(getThemedColor(Theme.key_featuredStickers_buttonText));
                 textView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 14);
                 textView.setTypeface(AndroidUtilities.getTypeface("fonts/rmedium.ttf"));
-                textView.setBackground(Theme.AdaptiveRipple.filledRect(getThemedColor(Theme.key_featuredStickers_addButton), 4));
+                textView.setBackground(Theme.AdaptiveRipple.filledRect(getThemedColor(Theme.key_featuredStickers_addButton), 6));
                 addView(textView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT, 0, 16, 16, 16, 16));
             }
         }
@@ -1599,7 +1599,8 @@ public class BottomSheet extends Dialog {
         try {
             super.dismiss();
         } catch (Exception e) {
-            FileLog.e(e);
+            //ignore: not attached to window manager
+            FileLog.e(e, false);
         }
     }
 

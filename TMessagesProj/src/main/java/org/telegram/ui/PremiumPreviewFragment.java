@@ -44,6 +44,7 @@ import org.telegram.PhoneFormat.PhoneFormat;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.BillingController;
 import org.telegram.messenger.BuildVars;
+import org.telegram.messenger.FileLoader;
 import org.telegram.messenger.LocaleController;
 import org.telegram.messenger.MediaDataController;
 import org.telegram.messenger.MessagesController;
@@ -554,6 +555,11 @@ public class PremiumPreviewFragment extends BaseFragment implements Notification
         return fragmentView;
     }
 
+    @Override
+    public boolean isActionBarCrossfadeEnabled() {
+        return false;
+    }
+
     public static void buyPremium(BaseFragment fragment) {
         buyPremium(fragment, "settings");
     }
@@ -841,6 +847,12 @@ public class PremiumPreviewFragment extends BaseFragment implements Notification
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.billingProductDetailsUpdated);
         NotificationCenter.getGlobalInstance().addObserver(this, NotificationCenter.currentUserPremiumStatusChanged);
         getNotificationCenter().addObserver(this, NotificationCenter.premiumPromoUpdated);
+
+        if (getMediaDataController().getPremiumPromo() != null) {
+            for (TLRPC.Document document : getMediaDataController().getPremiumPromo().videos) {
+                FileLoader.getInstance(currentAccount).loadFile(document, getMediaDataController().getPremiumPromo(), FileLoader.PRIORITY_HIGH, 0);
+            }
+        }
 
         return super.onFragmentCreate();
     }
@@ -1316,9 +1328,12 @@ public class PremiumPreviewFragment extends BaseFragment implements Notification
             premiumButtonView.setButton(LocaleController.getString(R.string.Loading), v -> {}, animated);
             premiumButtonView.setFlickerDisabled(true);
             return;
-        }*/
-        premiumButtonView.setButton(getPremiumButtonText(currentAccount, subscriptionTiers.get(selectedTierIndex)), v -> buyPremium(this, subscriptionTiers.get(selectedTierIndex), "settings"), animated);
-        premiumButtonView.setFlickerDisabled(false);
+        }
+        */
+        if (!subscriptionTiers.isEmpty()) {
+            premiumButtonView.setButton(getPremiumButtonText(currentAccount, subscriptionTiers.get(selectedTierIndex)), v -> buyPremium(this, subscriptionTiers.get(selectedTierIndex), "settings"), animated);
+            premiumButtonView.setFlickerDisabled(false);
+        }
     }
 
     @Override

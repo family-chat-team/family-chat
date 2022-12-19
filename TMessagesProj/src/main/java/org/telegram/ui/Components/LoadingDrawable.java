@@ -21,14 +21,23 @@ import org.telegram.ui.ActionBar.Theme;
 
 public class LoadingDrawable extends Drawable {
 
-    private Theme.ResourcesProvider resourcesProvider;
+    public Theme.ResourcesProvider resourcesProvider;
     public LoadingDrawable(Theme.ResourcesProvider resourcesProvider) {
+        this.resourcesProvider = resourcesProvider;
+    }
+
+    public LoadingDrawable(String colorKey1, String colorKey2, Theme.ResourcesProvider resourcesProvider) {
+        this.colorKey1 = colorKey1;
+        this.colorKey2 = colorKey2;
         this.resourcesProvider = resourcesProvider;
     }
 
     private long start = -1;
     private LinearGradient gradient;
     private int gradientColor1, gradientColor2;
+    public String colorKey1 = Theme.key_dialogBackground;
+    public String colorKey2 = Theme.key_dialogBackgroundGray;
+    public Integer color1, color2;
     private int gradientWidth;
 
     public Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -46,8 +55,8 @@ public class LoadingDrawable extends Drawable {
             return;
         }
         int gwidth = Math.min(AndroidUtilities.dp(400), bounds.width());
-        int color1 = Theme.getColor(Theme.key_dialogBackground, resourcesProvider);
-        int color2 = Theme.getColor(Theme.key_dialogBackgroundGray, resourcesProvider);
+        int color1 = this.color1 != null ? this.color1 : Theme.getColor(colorKey1, resourcesProvider);
+        int color2 = this.color2 != null ? this.color2 : Theme.getColor(colorKey2, resourcesProvider);
         if (gradient == null || gwidth != gradientWidth || color1 != gradientColor1 || color2 != gradientColor2) {
             gradientWidth = gwidth;
             gradientColor1 = color1;
@@ -60,7 +69,7 @@ public class LoadingDrawable extends Drawable {
         if (start < 0) {
             start = now;
         }
-        float offset = gradientWidth - (((now - start) / 1000f * gradientWidth) % gradientWidth);
+        float offset = gradientWidth - (((now - start) / 4000f * AndroidUtilities.dp(2) * gradientWidth) % gradientWidth);
 
         canvas.save();
         canvas.clipRect(bounds);

@@ -9,6 +9,7 @@ import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -69,7 +70,11 @@ import org.telegram.ui.ActionBar.AlertDialog;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.voip.CellFlickerDrawable;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -526,6 +531,21 @@ public class BotWebViewContainer extends FrameLayout implements NotificationCent
         if (isPageLoaded) {
             return;
         }
+
+        try {
+            InputStream in = getResources().getAssets().open("bot_clipboard_wrapper.js");
+            BufferedReader r = new BufferedReader(new InputStreamReader(in));
+            StringBuilder script = new StringBuilder();
+            String line;
+            while ((line = r.readLine()) != null) {
+                script.append(line).append("\n");
+            }
+            in.close();
+            evaluateJs(script.toString());
+        } catch (IOException e) {
+            FileLog.e(e);
+        }
+
         AnimatorSet set = new AnimatorSet();
         set.playTogether(
                 ObjectAnimator.ofFloat(webView, View.ALPHA, 1f),
@@ -733,7 +753,8 @@ public class BotWebViewContainer extends FrameLayout implements NotificationCent
 
     public void loadFlickerAndSettingsItem(int currentAccount, long botId, ActionBarMenuSubItem settingsItem) {
         TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(botId);
-        if (user.username != null && Objects.equals(user.username, DURGER_KING_USERNAME)) {
+        String username = UserObject.getPublicUsername(user);
+        if (username != null && Objects.equals(username, DURGER_KING_USERNAME)) {
             flickerView.setVisibility(VISIBLE);
             flickerView.setAlpha(1f);
             flickerView.setImageDrawable(SvgHelper.getDrawable(R.raw.durgerking_placeholder, getColor(Theme.key_windowBackgroundGray)));
@@ -866,9 +887,15 @@ public class BotWebViewContainer extends FrameLayout implements NotificationCent
         return isBackButtonVisible;
     }
 
-    @SuppressWarnings("deprecation")
     public void evaluateJs(String script) {
-        checkCreateWebView();
+        evaluateJs(script, true);
+    }
+
+    @SuppressWarnings("deprecation")
+    public void evaluateJs(String script, boolean create) {
+        if (create) {
+            checkCreateWebView();
+        }
         if (webView == null) {
             return;
         }
@@ -904,7 +931,7 @@ public class BotWebViewContainer extends FrameLayout implements NotificationCent
     }
 
     private void notifyEvent(String event, JSONObject eventData) {
-        evaluateJs("window.Telegram.WebView.receiveEvent('" + event + "', " + eventData + ");");
+        evaluateJs("window.Telegram.WebView.receiveEvent('" + event + "', " + eventData + ");", false);
     }
 
     public void setWebViewScrollListener(WebViewScrollListener webViewScrollListener) {
@@ -1170,11 +1197,7 @@ public class BotWebViewContainer extends FrameLayout implements NotificationCent
                         }
                     }
                     if (vibrationEffect != null) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            AndroidUtilities.getVibrator().vibrate(vibrationEffect.getVibrationEffectForOreo());
-                        } else {
-                            AndroidUtilities.getVibrator().vibrate(vibrationEffect.fallbackTimings, -1);
-                        }
+                        vibrationEffect.vibrate();
                     }
                 } catch (Exception e) {
                     FileLog.e(e);
@@ -1332,6 +1355,13 @@ public class BotWebViewContainer extends FrameLayout implements NotificationCent
         @JavascriptInterface
         public void postEvent(String eventType, String eventData) {
             AndroidUtilities.runOnUIThread(() -> onEventReceived(eventType, eventData));
+        }
+
+        @JavascriptInterface
+        public String getClipboardText() {
+            ClipboardManager clipboardManager = (ClipboardManager) getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+            CharSequence text = clipboardManager.getText();
+            return text != null ? text.toString() : null;
         }
     }
 

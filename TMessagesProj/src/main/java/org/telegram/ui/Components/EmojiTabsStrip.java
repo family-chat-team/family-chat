@@ -6,15 +6,15 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
-import android.graphics.RectF;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +23,7 @@ import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+import androidx.annotation.Nullable;
 import androidx.core.graphics.ColorUtils;
 import androidx.core.math.MathUtils;
 
@@ -35,6 +36,7 @@ import org.telegram.messenger.UserConfig;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.Theme;
 import org.telegram.ui.Components.Premium.PremiumLockIconView;
+import org.telegram.ui.SelectAnimatedEmojiDialog;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -90,7 +92,8 @@ public class EmojiTabsStrip extends ScrollableHorizontalScrollView {
 
     public boolean updateButtonDrawables = true;
 
-    public EmojiTabsStrip(Context context, Theme.ResourcesProvider resourcesProvider, boolean includeStandard, boolean includeAnimated, Runnable onSettingsOpen) {
+
+    public EmojiTabsStrip(Context context, Theme.ResourcesProvider resourcesProvider, boolean includeStandard, boolean includeAnimated, int type, Runnable onSettingsOpen) {
         super(context);
         this.includeAnimated = includeAnimated;
         this.resourcesProvider = resourcesProvider;
@@ -187,12 +190,14 @@ public class EmojiTabsStrip extends ScrollableHorizontalScrollView {
             protected void dispatchDraw(Canvas canvas) {
                 for (Map.Entry<View, Rect> entry : removingViews.entrySet()) {
                     View view = entry.getKey();
-                    Rect bounds = entry.getValue();
-                    canvas.save();
-                    canvas.translate(bounds.left, bounds.top);
-                    canvas.scale(view.getScaleX(), view.getScaleY(), bounds.width() / 2f, bounds.height() / 2f);
-                    view.draw(canvas);
-                    canvas.restore();
+                    if (view != null) {
+                        Rect bounds = entry.getValue();
+                        canvas.save();
+                        canvas.translate(bounds.left, bounds.top);
+                        canvas.scale(view.getScaleX(), view.getScaleY(), bounds.width() / 2f, bounds.height() / 2f);
+                        view.draw(canvas);
+                        canvas.restore();
+                    }
                 }
 
                 int selectFrom = (int) Math.floor(selectT), selectTo = (int) Math.ceil(selectT);
@@ -249,6 +254,9 @@ public class EmojiTabsStrip extends ScrollableHorizontalScrollView {
         setHorizontalScrollBarEnabled(false);
         addView(contentView);
 
+        if (type == SelectAnimatedEmojiDialog.TYPE_TOPIC_ICON) {
+            recentDrawableId = R.drawable.msg_emoji_smiles;
+        }
         contentView.addView(recentTab = new EmojiTabButton(context, recentDrawableId, false, false));
         recentTab.id = "recent".hashCode();
         if (!includeAnimated) {
@@ -610,6 +618,10 @@ public class EmojiTabsStrip extends ScrollableHorizontalScrollView {
         }
     }
 
+    protected ColorFilter getEmojiColorFilter() {
+        return Theme.chat_animatedEmojiTextColorFilter;
+    }
+
     private int selectorColor() {
         return 0x2effffff & Theme.getColor(Theme.key_chat_emojiPanelIcon, resourcesProvider);
     }
@@ -623,6 +635,7 @@ public class EmojiTabsStrip extends ScrollableHorizontalScrollView {
 
         public Integer id;
         public boolean newly;
+        private boolean isAnimatedEmoji;
 
         private ImageView imageView;
         private RLottieDrawable lottieDrawable;
@@ -706,8 +719,17 @@ public class EmojiTabsStrip extends ScrollableHorizontalScrollView {
                         }
                     }
                 }
+
+                @Override
+                public void setImageDrawable(@Nullable Drawable drawable) {
+                    super.setImageDrawable(drawable);
+                }
             };
             imageView.setImageDrawable(drawable);
+            if (drawable instanceof AnimatedEmojiDrawable) {
+                isAnimatedEmoji = true;
+                imageView.setColorFilter(getEmojiColorFilter());
+            }
             addView(imageView);
 
             lockView = new PremiumLockIconView(context, PremiumLockIconView.TYPE_STICKERS_PREMIUM_LOCKED, resourcesProvider);
@@ -908,7 +930,7 @@ public class EmojiTabsStrip extends ScrollableHorizontalScrollView {
 
         private void setColor(int color) {
             PorterDuffColorFilter colorFilter = new PorterDuffColorFilter(color, PorterDuff.Mode.MULTIPLY);
-            if (imageView != null) {
+            if (imageView != null && !isAnimatedEmoji) {
                 imageView.setColorFilter(colorFilter);
                 imageView.invalidate();
             }

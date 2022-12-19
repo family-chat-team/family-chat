@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
@@ -78,6 +79,7 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
                 }
             }
         });
+        actionBar.setColorFilterMode(PorterDuff.Mode.SRC_IN);
         FrameLayout avatarContainer = new FrameLayout(context);
         SizeNotifierFrameLayout fragmentView = new SizeNotifierFrameLayout(context) {
 
@@ -256,7 +258,7 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
                 if (user.self) {
                     nameTextView.setText(LocaleController.getString("SavedMessages", R.string.SavedMessages));
                     avatarDrawable.setAvatarType(AvatarDrawable.AVATAR_TYPE_SAVED);
-                    avatarDrawable.setSmallSize(true);
+                    avatarDrawable.setScaleSize(.8f);
                 } else {
                     nameTextView.setText(ContactsController.formatName(user.first_name, user.last_name));
                     avatarDrawable.setInfo(user);
@@ -295,6 +297,22 @@ public class MediaActivity extends BaseFragment implements SharedMediaLayout.Sha
         updateMediaCount();
         updateColors();
         return fragmentView;
+    }
+
+    @Override
+    public boolean isSwipeBackEnabled(MotionEvent event) {
+        if (!sharedMediaLayout.isSwipeBackEnabled()) {
+            return false;
+        }
+        return sharedMediaLayout.isCurrentTabFirst();
+    }
+
+    @Override
+    public boolean canBeginSlide() {
+        if (!sharedMediaLayout.isSwipeBackEnabled()) {
+            return false;
+        }
+        return super.canBeginSlide();
     }
 
     private void updateMediaCount() {

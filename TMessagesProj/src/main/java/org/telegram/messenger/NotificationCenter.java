@@ -9,8 +9,8 @@
 package org.telegram.messenger;
 
 import android.os.SystemClock;
-import android.util.Log;
 import android.util.SparseArray;
+import android.view.View;
 
 import androidx.annotation.UiThread;
 
@@ -131,6 +131,7 @@ public class NotificationCenter {
     public static final int voiceTranscriptionUpdate = totalEvents++;
     public static final int animatedEmojiDocumentLoaded = totalEvents++;
     public static final int recentEmojiStatusesUpdate = totalEvents++;
+    public static final int updateSearchSettings = totalEvents++;
 
     public static final int didGenerateFingerprintKeyPair = totalEvents++;
 
@@ -262,6 +263,9 @@ public class NotificationCenter {
     public static final int userEmojiStatusUpdated = totalEvents++;
     public static final int requestPermissions = totalEvents++;
     public static final int permissionsGranted = totalEvents++;
+    public static int topicsDidLoaded = totalEvents++;
+    public static int chatSwithcedToForum = totalEvents++;
+    public static int didUpdateGlobalAutoDeleteTimer = totalEvents++;
 
     private SparseArray<ArrayList<NotificationCenterDelegate>> observers = new SparseArray<>();
     private SparseArray<ArrayList<NotificationCenterDelegate>> removeAfterBroadcast = new SparseArray<>();
@@ -508,9 +512,6 @@ public class NotificationCenter {
         if (!allowDuringAnimation && isAnimationInProgress()) {
             DelayedPost delayedPost = new DelayedPost(id, args);
             delayedPosts.add(delayedPost);
-            if (BuildVars.LOGS_ENABLED) {
-                FileLog.e("delay post notification " + id + " with args count = " + args.length);
-            }
             return;
         }
         if (!postponeCallbackList.isEmpty()) {
@@ -650,5 +651,30 @@ public class NotificationCenter {
         private AllowedNotifications() {
             time = SystemClock.elapsedRealtime();
         }
+    }
+
+    public static void listenEmojiLoading(View view) {
+        if (view == null) {
+            return;
+        }
+
+        final NotificationCenterDelegate delegate = (id, account, args) -> {
+            if (id == NotificationCenter.emojiLoaded) {
+                if (view != null && view.isAttachedToWindow()) {
+                    view.invalidate();
+                }
+            }
+        };
+        view.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View view) {
+                NotificationCenter.getGlobalInstance().addObserver(delegate, NotificationCenter.emojiLoaded);
+            }
+
+            @Override
+            public void onViewDetachedFromWindow(View view) {
+                NotificationCenter.getGlobalInstance().removeObserver(delegate, NotificationCenter.emojiLoaded);
+            }
+        });
     }
 }

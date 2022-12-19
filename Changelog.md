@@ -1,3 +1,15 @@
+### v9.2.2
+No-SIM Signup, Auto-Delete All Chats, Topics 2.0 and More
+
+### v9.1.6
+Topics in Groups and More
+- Large groups with 200+ members can sort their discussions into topics.
+- Premium users can convert both video and voice messages to text.
+- Changing text size now affects all text in chats, like reply headers and link previews.
+- Tapping the phone number in a user's profile opens an updated menu with Voice and Video call options.
+- New animation when swiping left on messages to reply.
+- New placeholders when loading messages in groups and channels.
+
 ### v9.0.2
 Infinite Reactions, Emoji Statuses and More
 - New expandable reaction menu and dozens of new reactions for all users
