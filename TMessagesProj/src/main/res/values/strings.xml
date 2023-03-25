@@ -247,7 +247,7 @@
     <string name="DisappearingPhoto">Secret Photo</string>
     <string name="DisappearingVideo">Secret Video</string>
     <string name="DisappearingGif">Secret GIF</string>
-    <string name="CompatibilityChat">%1$s is using an older version of Family Chat or Telegram, so secret photos will be shown in compatibility mode.\n\nOnce %2$s updates his app, photos with timers for 1 minute or less will start working in \'Tap and hold to view\' mode, and you will be notified whenever the other party takes a screenshot.</string>
+    <string name="CompatibilityChat">%1$s is using an older version of Family Chat or Telegram, so secret photos will be shown in compatibility mode.\n\nOnce %2$s updates his/her app, photos with timers for 1 minute or less will start working in \'Tap and hold to view\' mode, and you will be notified whenever the other party takes a screenshot.</string>
     <string name="SearchMessages">Messages</string>
     <string name="SearchMessagesIn">Messages in %s</string>
     <string name="Search">Search</string>
